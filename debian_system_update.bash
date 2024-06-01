@@ -126,10 +126,17 @@ do_rustup() {
     check_fail "rustup update" || return
 }
 
+do_flatpak() {
+    cmd_exists flatpak || return
+    flatpak update
+    check_fail "flatpak update" || return
+}
+
 do_apt
 do_opam
 do_lazygit
 do_rustup
+do_flatpak
 # do_ghcup
 # do_gem
 
