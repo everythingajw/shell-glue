@@ -132,11 +132,29 @@ do_flatpak() {
     check_fail "flatpak update" || return
 }
 
+do_spicetify() {
+    cmd_exists spicetify || return
+    # latest version from github has `v` prefix
+    local latest_version="$(curl -s 'https://api.github.com/repos/spicetify/cli/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
+    local current_version="$(spicetify --version)"
+
+    if [ "$current_version" != "$latest_version" ]
+    then 
+        spicetify update
+        check_fail "spicetify update" || return
+
+        spicetify restore backup apply
+        check_fail "spicetify restore backup apply" || return
+    fi
+}
+
 do_apt
 do_opam
 do_lazygit
 do_rustup
 do_flatpak
+do_spicetify
+
 # do_ghcup
 # do_gem
 
@@ -150,7 +168,7 @@ if [ "${#missing[@]}" != '0' ]; then
 fi
 
 if [ "${#failed_commands[@]}" != '0' ]; then
-    eecho "The following commands failed:" 
+    eecho "The following commands failed:"
     for cmd in "${failed_commands[@]}"; do
         eecho " > $cmd"
     done
