@@ -147,8 +147,12 @@ do_spicetify() {
         spicetify update
         check_fail "spicetify update" || return
 
-        spicetify restore backup apply
-        check_fail "spicetify restore backup apply" || return
+        # spicetify restore backup apply
+        # check_fail "spicetify restore backup apply" || return
+
+        # <https://spicetify.app/docs/faq/#after-spotifys-update-running-spicetify-apply-or-spicetify-update-breaks-spotify>
+        spicetify backup apply
+        check_fail "spicetify backup apply" || return
     fi
 }
 
