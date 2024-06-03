@@ -95,7 +95,7 @@ do_opam() {
 
 do_lazygit() {
     cmd_exists lazygit || return
-    local latest_lazygit_version="$(curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | grep -Po '"tag_name": "v\K[^"]*')"
+    local latest_lazygit_version="$(curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
     local current_lazygit_version="$(lazygit --version | cut -d',' -f 4 | cut -d'=' -f 2)"
     [ "$latest_lazygit_version" == "$current_lazygit_version" ] && return
 
@@ -140,6 +140,10 @@ do_spicetify() {
 
     if [ "$current_version" != "$latest_version" ]
     then 
+        # Fix permissions as per the docs: <https://spicetify.app/docs/advanced-usage/installation/#spotify-installed-from-flatpak>
+        sudo chmod a+wr /var/lib/flatpak/app/com.spotify.Client/x86_64/stable/active/files/extra/share/spotify
+        sudo chmod a+wr -R /var/lib/flatpak/app/com.spotify.Client/x86_64/stable/active/files/extra/share/spotify/Apps
+        
         spicetify update
         check_fail "spicetify update" || return
 
