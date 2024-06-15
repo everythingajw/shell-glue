@@ -156,12 +156,20 @@ do_spicetify() {
     fi
 }
 
+do_vim_plugins() {
+    cmd_exists "vim" || return
+	# set -lx SHELL (which sh)
+	vim +BundleInstall! +BundleClean +qall
+    check_fail "vim update" || return
+}
+
 do_apt
 do_opam
 do_lazygit
 do_rustup
 do_flatpak
 do_spicetify
+do_vim_plugins
 
 # do_ghcup
 # do_gem
