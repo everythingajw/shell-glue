@@ -26,6 +26,10 @@ has_cmd() {
     which "$@" > /dev/null 2>&1
 }
 
+update_section() {
+    echo " > $*"
+}
+
 assume_yes='f'
 
 while [ "$#" != '0' ]; do
@@ -76,6 +80,8 @@ check_fail() {
 }
 
 do_apt() {
+    update_section apt
+
     sudo apt update
     check_fail "apt update" || return
 
@@ -86,6 +92,8 @@ do_apt() {
 do_opam() {
     cmd_exists opam || return
 
+    update_section opam
+
     opam update
     check_fail "opam update" || return
 
@@ -95,6 +103,9 @@ do_opam() {
 
 do_lazygit() {
     cmd_exists lazygit || return
+
+    update_section lazygit
+
     local latest_lazygit_version="$(curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
     local current_lazygit_version="$(lazygit --version | cut -d',' -f 4 | cut -d'=' -f 2)"
     [ "$latest_lazygit_version" == "$current_lazygit_version" ] && return
@@ -105,35 +116,41 @@ do_lazygit() {
     temp_files+=("$extract_into")
     curl -Lo "$tarfile" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${latest_lazygit_version}_Linux_x86_64.tar.gz"
     tar xf "$tarfile" -C "$extract_into" lazygit
+    mkdir --parents -- /usr/local/bin
     sudo install "$extract_into/lazygit" /usr/local/bin
 }
 
 do_ghcup() {
     cmd_exists ghcup || return
+    update_section ghcup
     ghcup upgrade
     check_fail "ghcup upgrade" || return
 }
 
 do_gem() {
     cmd_exists gem || return
+    update_section gem
     sudo gem update
     check_fail "gem update" || return
 }
 
 do_rustup() {
     cmd_exists rustup || return
+    update_section rustup
     rustup update stable
     check_fail "rustup update" || return
 }
 
 do_flatpak() {
     cmd_exists flatpak || return
+    update_section flatpak
     flatpak update
     check_fail "flatpak update" || return
 }
 
 do_spicetify() {
     cmd_exists spicetify || return
+    update_section spicetify
     # latest version from github has `v` prefix
     local latest_version="$(curl -s 'https://api.github.com/repos/spicetify/cli/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
     local current_version="$(spicetify --version)"
@@ -158,6 +175,7 @@ do_spicetify() {
 
 do_vim_plugins() {
     cmd_exists "vim" || return
+    update_section "vim plugins"
 	# set -lx SHELL (which sh)
 	vim +BundleInstall! +BundleClean +qall
     check_fail "vim update" || return
