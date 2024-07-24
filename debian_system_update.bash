@@ -62,6 +62,7 @@ trap cleanup EXIT
 
 failed_commands=()
 missing=()
+skipped_on_wsl=()
 
 cmd_exists() {
     if ! has_cmd "$1"; then
@@ -77,6 +78,10 @@ check_fail() {
         return 1
     fi
     return 0
+}
+
+is_wsl() {
+    grep Microsoft /proc/version &> /dev/null
 }
 
 do_apt() {
@@ -149,6 +154,12 @@ do_flatpak() {
 }
 
 do_spicetify() {
+    if is_wsl
+    then
+        skipped_on_wsl+=("spicetify")
+        return
+    fi
+
     cmd_exists spicetify || return
     update_section spicetify
     # latest version from github has `v` prefix
@@ -197,6 +208,15 @@ cleanup
 if [ "${#missing[@]}" != '0' ]; then
     eecho "The following updates were skipped due to missing commands:"
     for cmd in "${missing[@]}"; do
+        eecho " > $cmd"
+    done
+fi
+
+if [ "${#skipped_on_wsl[@]}" != '0']
+then
+    eecho "The following updates were skipped on WSL:"
+    for cmd in "${skipped_on_wsl[@]}"
+    do
         eecho " > $cmd"
     done
 fi
