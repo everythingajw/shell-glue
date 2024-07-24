@@ -205,9 +205,11 @@ do_vim_plugins
 
 cleanup
 
-if [ "${#missing[@]}" != '0' ]; then
+if [ "${#missing[@]}" != '0' ]
+then
     eecho "The following updates were skipped due to missing commands:"
-    for cmd in "${missing[@]}"; do
+    for cmd in "${missing[@]}"
+    do
         eecho " > $cmd"
     done
 fi
@@ -221,9 +223,11 @@ then
     done
 fi
 
-if [ "${#failed_commands[@]}" != '0' ]; then
+if [ "${#failed_commands[@]}" != '0' ]
+then
     eecho "The following commands failed:"
-    for cmd in "${failed_commands[@]}"; do
+    for cmd in "${failed_commands[@]}"
+    do
         eecho " > $cmd"
     done
 fi
