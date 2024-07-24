@@ -81,7 +81,7 @@ check_fail() {
 }
 
 is_wsl() {
-    grep Microsoft /proc/version &> /dev/null
+    grep -i microsoft /proc/version &> /dev/null
 }
 
 do_apt() {
@@ -214,7 +214,7 @@ then
     done
 fi
 
-if [ "${#skipped_on_wsl[@]}" != '0']
+if [ "${#skipped_on_wsl[@]}" != '0' ]
 then
     eecho "The following updates were skipped on WSL:"
     for cmd in "${skipped_on_wsl[@]}"
