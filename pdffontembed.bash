@@ -20,7 +20,7 @@ outfile="$2"
 
 # ghostscript (at least with the given options) won't crash if the input
 # file doesn't exist, so we'll check that ahead of time.
-if [ ! -f $infile ]; then
+if [ ! -f "$infile" ]; then
     eecho "No such file $infile"
     exit 1
 fi
