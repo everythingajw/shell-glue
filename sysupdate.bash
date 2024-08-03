@@ -228,6 +228,28 @@ do_vim_plugins() {
     check_fail "vim update" || return
 }
 
+do_shell_glue() {
+    update_section "shell-glue"
+
+    # This script is really located in the shell-glue repo. Obtain the directory where this script is, resolving all symlinks.
+    local dir
+    dir="$(realpath -- "${BASH_SOURCE[0]}")"
+    dir="$(dirname -- "$dir")"
+
+    # We'll play it really safe and only pull if there are no outstanding changes.
+    if [ "$(git -C "$dir" status --porcelain | wc -l)" != 0 ]
+    then
+        eecho "Cannot update shell-glue. Outstanding local changes found."
+        failed_commands+=("shell-glue")
+        return 1
+    fi
+    
+    # The actual update should be as simple as pulling.
+    git pull
+
+    check_fail "shell-glue git pull" || return
+}
+
 [ "$distro" = 'debian' ] && do_apt
 [ "$distro" = 'gentoo' ] && do_portage
 do_opam
@@ -236,11 +258,14 @@ do_rustup
 do_flatpak
 do_spicetify
 do_vim_plugins
+do_shell_glue
 
 # do_ghcup
 # do_gem
 
 cleanup
+
+echo
 
 if [ "${#missing[@]}" != '0' ]
 then
