@@ -141,13 +141,17 @@ do_lazygit() {
 
     update_section lazygit
 
-    local latest_lazygit_version="$(curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
-    local current_lazygit_version="$(lazygit --version | cut -d',' -f 4 | cut -d'=' -f 2)"
+    local latest_lazygit_version
+    latest_lazygit_version="$(curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
+    local current_lazygit_version
+    current_lazygit_version="$(lazygit --version | cut -d',' -f 4 | cut -d'=' -f 2)"
     [ "$latest_lazygit_version" == "$current_lazygit_version" ] && return
 
-    local tarfile="$(mktemp)"
+    local tarfile
+    tarfile="$(mktemp)"
     temp_files+=("$tarfile")
-    local extract_into="$(mktemp -d)"
+    local extract_into
+    extract_into="$(mktemp -d)"
     temp_files+=("$extract_into")
     curl -Lo "$tarfile" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${latest_lazygit_version}_Linux_x86_64.tar.gz"
     tar xf "$tarfile" -C "$extract_into" lazygit
@@ -193,8 +197,10 @@ do_spicetify() {
     cmd_exists spicetify || return
     update_section spicetify
     # latest version from github has `v` prefix
-    local latest_version="$(curl -s 'https://api.github.com/repos/spicetify/cli/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
-    local current_version="$(spicetify --version)"
+    local latest_version
+    latest_version="$(curl -s 'https://api.github.com/repos/spicetify/cli/releases/latest' | jq -r '.tag_name' | sed s/v//g)"
+    local current_version
+    current_version="$(spicetify --version)"
 
     if [ "$current_version" != "$latest_version" ]
     then 
