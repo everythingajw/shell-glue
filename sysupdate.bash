@@ -48,6 +48,7 @@ while [ "$#" != '0' ]; do
 done
 
 # Distro detection
+distro=
 if which lsb_release &> /dev/null
 then
     case "$(lsb_release -d | cut -d $'\t' -f 2- | tr '[:upper:]' '[:lower:]')" in
@@ -249,7 +250,7 @@ do_shell_glue() {
     dir="$(dirname -- "$dir")"
 
     # We'll play it really safe and only pull if there are no outstanding changes.
-    if [ "$(git -C "$dir" status --porcelain | wc -l)" != 0 ]
+    if repo_has_local_changes "$dir"
     then
         eecho "Cannot update shell-glue. Outstanding local changes found."
         failed_commands+=("shell-glue")
@@ -257,7 +258,7 @@ do_shell_glue() {
     fi
     
     # The actual update should be as simple as pulling.
-    git pull
+    git -C "$dir" pull
 
     check_fail "shell-glue git pull" || return
 }
@@ -269,26 +270,28 @@ do_dotfiles() {
     if [ ! -d "$DOTFILES_DIR/.git" ]
     then
         section_failed "dotfiles" "dotfiles directory is not a git repository"
-        return 1
-    fi
-   
-    if [ ! -x "$DOTFILES_DIR/install.sh" ]
-    then
-        section_failed "dotfiles" "dotfiles directory does not have install script or it is not executable"
-        return 1
+        return
     fi
 
     if repo_has_local_changes "$DOTFILES_DIR"
     then
         section_failed "dotfiles" "refusing to update dotfiles repo: outstanding local changes found"
-        return 1
+        return
     fi
 
     # Fetch changes
     git -C "$DOTFILES_DIR" pull
+    check_fail "dotfiles git pull" || return
     
     # Apply changes
-    "$DOTFILES_DIR/install.sh"
+    local install_script="$DOTFILES_DIR/install.sh"
+    if [ ! -x "$install_script" ]
+    then
+        section_failed "dotfiles" "dotfiles directory does not have install script or it is not executable"
+        return
+    fi
+    "$install_script"
+    check_fail "dotfiles install" || return
 }
 
 
@@ -335,6 +338,11 @@ then
     do
         eecho " > $cmd"
     done
+fi
+
+if [ -z "$distro" ]
+then
+    eecho "Warning: system package manager updates not applied because the distro could not be detected"
 fi
 
 echo 'System update complete'
