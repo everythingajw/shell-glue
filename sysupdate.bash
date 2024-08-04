@@ -233,6 +233,24 @@ do_spicetify() {
     fi
 }
 
+do_vim_vundle() {
+    local vundle_dir="$HOME/.vim/bundle/Vundle.vim"
+    if [ ! -d "$vundle_dir/.git" ]
+    then
+        section_failed "vim vundle" "cannot update vundle: vundle directory is not a git repository"
+        return
+    fi
+
+    if repo_has_local_changes "$vundle_dir"
+    then
+        section_failed "vim vundle" "refusing to update vundle: repo has outstanding local changes"
+        return
+    fi
+
+    git -C "$vundle_dir" pull
+    check_fail "git pull vundle" || return
+}
+
 do_vim_plugins() {
     cmd_exists "vim" || return
     update_section "vim plugins"
@@ -311,6 +329,7 @@ do_lazygit
 do_rustup
 do_flatpak
 do_spicetify
+do_vim_vundle
 do_vim_plugins
 do_shell_glue
 do_dotfiles
