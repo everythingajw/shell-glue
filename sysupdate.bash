@@ -259,8 +259,17 @@ do_shell_glue() {
     
     # The actual update should be as simple as pulling.
     git -C "$dir" pull
-
     check_fail "shell-glue git pull" || return
+
+    # Now install
+    local install_script="$dir/install.sh"
+    if [ ! -x "$install_script" ]
+    then
+        section_failed "shell-glue" "shell-glue does not have install script or it is not executable"
+        return
+    fi
+    "$install_script"
+    check_fail "shell-glue install" || return
 }
 
 do_dotfiles() {
