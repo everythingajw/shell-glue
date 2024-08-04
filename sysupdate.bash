@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DOTFILES_DIR="$HOME/doc/dotfiles"
+
 usage() {
     cat <<EOF
 usage: $0 [options]
@@ -92,6 +94,16 @@ check_fail() {
         return 1
     fi
     return 0
+}
+
+section_failed() {
+    # section_failed <command> <reason>
+    eecho "$2"
+    failed_commands+=("$1")
+}
+
+repo_has_local_changes() {
+    [ "$(git -C "$1" status --porcelain | wc -l)" != 0 ]
 }
 
 is_wsl() {
@@ -250,6 +262,36 @@ do_shell_glue() {
     check_fail "shell-glue git pull" || return
 }
 
+do_dotfiles() {
+    update_section "dotfiles"
+
+    # We need to be in a git repo for this update to happen and we need to have the install script.
+    if [ ! -d "$DOTFILES_DIR/.git" ]
+    then
+        section_failed "dotfiles" "dotfiles directory is not a git repository"
+        return 1
+    fi
+   
+    if [ ! -x "$DOTFILES_DIR/install.sh" ]
+    then
+        section_failed "dotfiles" "dotfiles directory does not have install script or it is not executable"
+        return 1
+    fi
+
+    if repo_has_local_changes "$DOTFILES_DIR"
+    then
+        section_failed "dotfiles" "refusing to update dotfiles repo: outstanding local changes found"
+        return 1
+    fi
+
+    # Fetch changes
+    git -C "$DOTFILES_DIR" pull
+    
+    # Apply changes
+    "$DOTFILES_DIR/install.sh"
+}
+
+
 [ "$distro" = 'debian' ] && do_apt
 [ "$distro" = 'gentoo' ] && do_portage
 do_opam
@@ -259,6 +301,7 @@ do_flatpak
 do_spicetify
 do_vim_plugins
 do_shell_glue
+do_dotfiles
 
 # do_ghcup
 # do_gem
