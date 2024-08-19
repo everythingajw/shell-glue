@@ -62,6 +62,7 @@ files_to_install=(
     'no'
     'pdffontembed.bash'
     'sysupdate.bash'
+    'updatevim.bash'
 )
 
 bin_name() {
