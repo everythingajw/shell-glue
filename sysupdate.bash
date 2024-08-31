@@ -286,7 +286,7 @@ do_shell_glue() {
         section_failed "shell-glue" "shell-glue does not have install script or it is not executable"
         return
     fi
-    "$install_script"
+    "$install_script" --verbose
     check_fail "shell-glue install" || return
 }
 
