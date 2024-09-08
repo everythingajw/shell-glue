@@ -1,6 +1,7 @@
 #!/bin/bash
 
-pandoc_filters=(pandoc-plot)
+pandoc_filters=()
+which pandoc-plot &> /dev/null && pandoc_filters+=(pandoc-plot)
 template_vars=("geometry:margin=1in" "papersize:letter")
 pdf_engine=xelatex
 markdown_flavor=markdown
