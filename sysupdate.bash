@@ -321,7 +321,26 @@ do_dotfiles() {
     check_fail "dotfiles install" || return
 }
 
+do_gh_cli_keyring() {
+    [ "$distro" = 'debian' ] || return 0
 
+    update_section "gh cli keyring"
+
+    local keyring_path
+    if [ -f /usr/share/keyrings/githubcli-archive-keyring.gpg ]; then
+        keyring_path="/usr/share/keyrings/githubcli-archive-keyring.gpg"
+    else
+        keyring_path="/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+    fi
+
+    sudo curl -Lo "$keyring_path" 'https://cli.github.com/packages/githubcli-archive-keyring.gpg'
+    check_fail "curl gh gpg key" || return
+
+    sudo chmod go+r "$keyring_path"
+}
+
+# Need to do the gh cli keyring first to avoid `apt update` giving a warning
+[ "$distro" = 'debian' ] && do_gh_cli_keyring
 [ "$distro" = 'debian' ] && do_apt
 [ "$distro" = 'gentoo' ] && do_portage
 do_opam
