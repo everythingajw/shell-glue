@@ -63,6 +63,8 @@ files_to_install=(
     'pdffontembed.bash'
     'sysupdate.bash'
     'updatevim.bash'
+    'tar7z.bash'
+    'untar7z.bash'
     'start-redis-docker.bash'
 )
 
