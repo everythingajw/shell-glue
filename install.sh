@@ -66,6 +66,7 @@ files_to_install=(
     'tar7z.bash'
     'untar7z.bash'
     'start-redis-docker.bash'
+    'start-redis-podman.bash'
 )
 
 bin_name() {
