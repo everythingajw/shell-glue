@@ -70,12 +70,17 @@ fi
 temp_files=()
 
 cleanup() {
+    local pids="$(jobs -p)"
+    if [ -n "$pids" ]
+    then
+        kill -TERM $pids
+    fi
     if [ "${#temp_files[@]}" != 0 ]; then
         rm -rf "${temp_files[@]}" > /dev/null 2>&1 || true
     fi
 }
 
-trap cleanup EXIT
+trap cleanup EXIT SIGINT
 
 failed_commands=()
 missing=()
@@ -351,7 +356,7 @@ do_spicetify
 do_vim_vundle
 do_vim_plugins
 do_shell_glue
-do_dotfiles
+do_dotfilesk
 
 # do_ghcup
 # do_gem
