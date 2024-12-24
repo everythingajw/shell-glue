@@ -356,7 +356,7 @@ do_spicetify
 do_vim_vundle
 do_vim_plugins
 do_shell_glue
-do_dotfilesk
+do_dotfiles
 
 # do_ghcup
 # do_gem
