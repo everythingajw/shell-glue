@@ -129,6 +129,19 @@ do_apt() {
     check_fail "apt upgrade" || return
 }
 
+do_apt_kernel_headers() {
+    # We need to do kernel headers because some kernel modules need them. Without the headers, the modules won't rebuild
+    # properly which causes a plethora of issues that are totally not obvious, such as VirtualBox machines not booting
+    # or my graphical desktop environment not starting because the nvidia module wasn't rebuilt.
+
+    [ "$distro" != 'debian' ] && return 0
+
+    update_section 'apt kernel headers'
+
+    sudo apt install "linux-headers-$(uname -r)"
+    check_fail "apt install kernel headers" || return  
+}
+
 do_portage() {
     # Don't try to run this on non-Gentoo systems
     [ "$distro" != 'gentoo' ] && return 0
@@ -347,6 +360,7 @@ do_gh_cli_keyring() {
 # Need to do the gh cli keyring first to avoid `apt update` giving a warning
 [ "$distro" = 'debian' ] && do_gh_cli_keyring
 [ "$distro" = 'debian' ] && do_apt
+[ "$distro" = 'debian' ] && do_apt_kernel_headers
 [ "$distro" = 'gentoo' ] && do_portage
 do_opam
 do_lazygit
