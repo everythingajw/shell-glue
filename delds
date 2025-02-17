@@ -30,10 +30,11 @@ do
 done
 
 dirs=("$@")
-[ "${#dirs[@]}" != 0 ] && dirs+=('.')
+[ "${#dirs[@]}" = 0 ] && dirs+=('.')
 
-for dir in "${dirs[@]}"
+
+for d in "${dirs[@]}"
 do
-    find "$dir" '('  '(' -type d -a -name '__MACOSX' ')' -o '(' -type f -a -name '.DS_Store' ')' ')' -exec rm -rf -- '{}' +
+    find "$d" '('  '(' -type d -a -name '__MACOSX' ')' -o '(' -type f -a -name '.DS_Store' ')' ')' -print -exec rm -rf -- '{}' +
 done
 
