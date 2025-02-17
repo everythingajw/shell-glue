@@ -7,9 +7,14 @@ usage: $(basename -- "${BASH_SOURCE[0]}") [options] DIR...
 Recursively remove those pesky .DS_Store and __MACOSX files.
 
 options:
-    DIR           the directory to remove the pesky files from
-                  (default: .)
-    -h, --help    print this help and exit
+    DIR             the directory to remove the pesky files from
+                    (default: .)
+    -h, --help      print this help and exit
+    -p, --print     print offending file names as they're found
+    -P, --no-print  (default) do not print offending file names as they're found
+                    (opposite of -p)
+
+Between -p and -P, the last takes precedence.
 EOF
 }
 
@@ -21,20 +26,25 @@ do
     esac
 done
 
-for arg in "$@"
+directories=()
+print_names=
+while [ "$#" -gt 0 ]
 do
+    arg="$1"
     case "$arg" in
+        -p|--print) print_names=-print ;;
+        -P|--no-print) print_names= ;;
         -*) echo "error: unrecognized option $arg" >&2; exit 1;;
-        *) ;;
+        *) directories+="$arg" ;;
     esac
+    shift
 done
 
-dirs=("$@")
-[ "${#dirs[@]}" = 0 ] && dirs+=('.')
+[ "${#directories[@]}" = 0 ] && directories+=('.')
 
 
-for d in "${dirs[@]}"
+for d in "${directories[@]}"
 do
-    find "$d" '('  '(' -type d -a -name '__MACOSX' ')' -o '(' -type f -a -name '.DS_Store' ')' ')' -print -exec rm -rf -- '{}' +
+    find "$d" '('  '(' -type d -a -name '__MACOSX' ')' -o '(' -type f -a -name '.DS_Store' ')' ')' $print_names -exec rm -rf -- '{}' +
 done
 
