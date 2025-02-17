@@ -56,6 +56,7 @@ do
 done
 
 files_to_install=(
+    'delds'
     'flattendir.bash'
     'md2html.bash'
     'md2pdf.bash'

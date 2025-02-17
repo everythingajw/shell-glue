@@ -1,0 +1,39 @@
+#!/bin/bash
+
+usage () {
+    cat <<EOF
+usage: $(basename -- "${BASH_SOURCE[0]}") [options] DIR...
+
+Recursively remove those pesky .DS_Store and __MACOSX files.
+
+options:
+    DIR           the directory to remove the pesky files from
+                  (default: .)
+    -h, --help    print this help and exit
+EOF
+}
+
+for arg in "$@"
+do
+    case "$arg" in
+        -h|--help) usage; exit 0;;
+        *) ;;
+    esac
+done
+
+for arg in "$@"
+do
+    case "$arg" in
+        -*) echo "error: unrecognized option $arg" >&2; exit 1;;
+        *) ;;
+    esac
+done
+
+dirs=("$@")
+[ "${#dirs[@]}" != 0 ] && dirs+=('.')
+
+for dir in "${dirs[@]}"
+do
+    find "$dir" '('  '(' -type d -a -name '__MACOSX' ')' -o '(' -type f -a -name '.DS_Store' ')' ')' -exec rm -rf -- '{}' +
+done
+
