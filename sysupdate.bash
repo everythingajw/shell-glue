@@ -187,7 +187,7 @@ do_lazygit() {
     curl -Lo "$tarfile" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${latest_lazygit_version}_Linux_x86_64.tar.gz"
     tar xf "$tarfile" -C "$extract_into" lazygit
     mkdir --parents -- /usr/local/bin
-    sudo install "$extract_into/lazygit" /usr/local/bin
+    sudo install "$extract_into/lazygit" -D -t /usr/local/bin
 }
 
 do_ghcup() {
