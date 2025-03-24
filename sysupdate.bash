@@ -357,20 +357,35 @@ do_gh_cli_keyring() {
     sudo chmod go+r "$keyring_path"
 }
 
-# Need to do the gh cli keyring first to avoid `apt update` giving a warning
-[ "$distro" = 'debian' ] && do_gh_cli_keyring
-[ "$distro" = 'debian' ] && do_apt
-[ "$distro" = 'debian' ] && do_apt_kernel_headers
-[ "$distro" = 'gentoo' ] && do_portage
-do_opam
-do_lazygit
-do_rustup
-do_flatpak
-do_spicetify
-do_vim_vundle
-do_vim_plugins
-do_shell_glue
-do_dotfiles
+do_topgrade() {
+    cmd_exists topgrade || return
+    topgrade -n "${topgrade_args[@]}"
+}
+
+topgrade_args=(--disable containers)
+
+if [ "$distro" = 'debian' ]
+then
+    topgrade_args+=(--disable system)
+    # Need to do the gh cli keyring first to avoid `apt update` giving a warning
+    do_gh_cli_keyring
+    do_apt
+    do_apt_kernel_headers
+fi
+
+do_topgrade
+
+# [ "$distro" = 'gentoo' ] && do_portage
+
+# do_opam
+# do_lazygit
+# do_rustup
+# do_flatpak
+# do_spicetify
+# do_vim_vundle
+# do_vim_plugins
+# do_shell_glue
+# do_dotfiles
 
 # do_ghcup
 # do_gem
