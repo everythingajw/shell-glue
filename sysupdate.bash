@@ -359,7 +359,7 @@ do_gh_cli_keyring() {
 
 do_topgrade() {
     cmd_exists topgrade || return
-    topgrade -n "${topgrade_args[@]}"
+    topgrade "${topgrade_args[@]}"
 }
 
 topgrade_args=(--disable containers)
