@@ -5,6 +5,6 @@
 #     vim +BundleInstall! +BundleClean +qall
 # end
 
-SHELL="$(which sh)"
+export SHELL="$(which sh)"
 vim +BundleInstall! +BundleClean +qall
 
