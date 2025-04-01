@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#function dia --wraps='dir -A' --description 'alias dia=dir -A'
+#  dir -A $argv
+#end
+
+dir -A "$@"
+

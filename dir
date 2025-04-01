@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#function dir --wraps=lsd\ --long\ --date\ +\'\%Y-\%m-\%d\ \%H:\%M\'\ --icon-theme\ unicode\ --group-directories-first --description alias\ dir=lsd\ --long\ --date\ +\'\%Y-\%m-\%d\ \%H:\%M\'\ --icon-theme\ unicode\ --group-directories-first
+#  lsd --long --date +'%Y-%m-%d %H:%M' --icon never --group-directories-first $argv
+#end
+
+time_format='+%Y-%m-%d %H:%M'
+
+pgm=ls
+args=(-l --time-style="$time_format" --group-directories-first)
+if which lsd &> /dev/null
+then
+    pgm=lsd
+    args=(--long --date "$time_format" --icon never --group-directories-first)
+fi
+
+"$pgm" "${args[@]}" "$@"
+
+
