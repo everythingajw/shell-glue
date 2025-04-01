@@ -362,7 +362,7 @@ do_topgrade() {
     topgrade "${topgrade_args[@]}"
 }
 
-topgrade_args=(--disable containers)
+topgrade_args=(--disable containers --disable vim)
 
 if [ "$distro" = 'debian' ]
 then
