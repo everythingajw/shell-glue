@@ -35,7 +35,7 @@ do
         -p|--print) print_names=-print ;;
         -P|--no-print) print_names= ;;
         -*) echo "error: unrecognized option $arg" >&2; exit 1;;
-        *) directories+="$arg" ;;
+        *) directories+=("$arg") ;;
     esac
     shift
 done
