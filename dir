@@ -14,6 +14,6 @@ then
     args=(--long --date "$time_format" --icon never --group-directories-first)
 fi
 
-"$pgm" "${args[@]}" "$@"
+exec "$pgm" "${args[@]}" "$@"
 
 

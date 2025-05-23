@@ -4,5 +4,5 @@
 #  dir -A $argv
 #end
 
-dir -A "$@"
+exec dir -A "$@"
 
