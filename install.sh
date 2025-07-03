@@ -59,6 +59,7 @@ files_to_install=(
     'delds'
     'dia'
     'dir'
+    'dirdiff.py'
     'flattendir.bash'
     'md2html.bash'
     'md2pdf.bash'
