@@ -61,6 +61,7 @@ files_to_install=(
     'dir'
     'dirdiff.py'
     'flattendir.bash'
+    'getmacaddr'
     'md2html.bash'
     'md2pdf.bash'
     'no'
