@@ -122,10 +122,10 @@ do_apt() {
 
     update_section apt
 
-    sudo apt update
-    check_fail "apt update" || return
+    #sudo apt update
+    #check_fail "apt update" || return
 
-    sudo apt upgrade
+    sudo apt -U upgrade
     check_fail "apt upgrade" || return
 }
 
@@ -138,7 +138,7 @@ do_apt_kernel_headers() {
 
     update_section 'apt kernel headers'
 
-    sudo apt install "linux-headers-$(uname -r)"
+    sudo apt -U install "linux-headers-$(uname -r)"
     check_fail "apt install kernel headers" || return  
 }
 
