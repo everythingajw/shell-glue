@@ -1,0 +1,221 @@
+#!/bin/bash
+
+# easymkfs: reformat an entire drive with a single partition of a particular filesystem.
+#
+# History:
+#    I got tired of repeating the same ten steps for reformatting a drive because I use
+#    the same single USB stick for absolutely *everything*. This whole thing initially
+#    started because the oh-so-ubiquitous Doremi ShowVaults that seemingly every DMS
+#    client has in one way or another don't support a wide array of filesystem. In fact,
+#    it turns out that a lot of cinema equipment doesn't support a wide array of filesystems.
+#    BUT, it turns out that ext2 is pretty widely supported. I, of course, am normal
+#    and use updated, more modern filesystems which of course are not always supported
+#    by cinema hardware. So I always had to reformat a USB stick as ext2 to ingest
+#    a KDM or something. But I got tired of changing the filesystem format on my USB
+#    sticks so often and I wrote this.
+#
+# I, AJ W, assume NO responsibility for any damages, especially data loss.
+# Use this software AT YOUR OWN RISK.
+
+readonly script_name="$(basename -- "${BASH_SOURCE[0]}")"
+
+SUPPORTED_FILESYSTEMS=(ext2 ext3 ext4 ntfs exfat)
+
+usage () {
+    cat >&2 <<EOF
+$script_name: reformat an entire drive with a single partition of a particular filesystem
+
+usage: $script_name [options] DEVICE
+
+options:
+    -h, --help          Show this help on stderr and exit.
+    -t, --type TYPE     Format partition as filesystem TYPE.
+                        Supported filesystems: ${SUPPORTED_FILESYSTEMS[*]}.
+                        For NTFS, a quick format is performed.
+    -l, --label LABEL   Set partition label to LABEL,
+                        If not specified, no attempt is made to set the label.
+    -7, --777           Mount and chmod 777 the root of the partition (default).
+    --no-777            Do NOT mount and chmod 777 the root of the partition (opposite of --777).
+    DEVICE              The device (not partition) the filesystem should be made on.
+
+Between --777 and --no-777, the last one specified takes precedence.
+
+All partitions will be unmounted when this program exits.
+
+This script must be run as root.
+
+ext2 is used because it's the most widely supported among all things cinema.
+Looking at you, ShowVault, you don't support exFAT....
+
+========== WARNING WARNING WARNING ==========
+THE ENTIRE CONTENTS OF THE DEVICE SPECIFIED WILL BE FOREVER LOST IN THE ABYSS!
+All partitions will be wiped and the ENTIRE DISK will be made into one contiguous partition.
+Make sure you are 100% CERTAIN that you are operating on the correct disk - this script
+will NOT prompt for confirmation before operating!
+EOF
+}
+
+die () {
+    echo "${@:2}" >&2
+    exit "$1"
+}
+
+cleanup () {
+    if [ -n "$mountpt" ]
+    then
+        umount -q "$mountpt"
+        rmdir -- "$mountpt"
+    fi
+}
+
+trap cleanup EXIT
+
+for arg in "$@"
+do
+    case "$arg" in
+        -h|--help) usage; exit 0;;
+        *) ;;
+    esac
+done
+
+fstype=
+chmod777=t
+device=
+label=
+
+while [ "$#" != 0 ]
+do
+    case "$1" in
+        -7|--777) chmod777=t;;
+        --no-777) chmod777=f;;
+        -t|--type)
+            [ -n "$fstype" ] && die 1 "Error: filesystem type already specified"
+            shift
+            fstype="$1"
+            # basically, the "in" operator: <https://stackoverflow.com/a/15394738>
+            [[ " ${SUPPORTED_FILESYSTEMS[*]} " =~ " ${fstype} " ]] || die 1 "Error: unsupported filesystem type $fstype"
+            ;;
+        -l|--label)
+            [ -n "$label" ] && die 1 "Error: label already specified"
+            shift
+            label="$1"
+            [ -z "$label" ] && die 1 "Error: label cannot be empty"
+            [[ "$label" =~ ^[a-zA-Z0-9]+$ ]] || die 1 "Error: label can only contain alphanumeric characters"
+            [ "${#label}" -gt 16 ] && die 1 "Error: maximum label length is 16 characters"
+            ;;
+        -*)
+            echo "Error: invalid argument $1"
+            exit 1
+            ;;
+        *)
+            [ -n "$device" ] && die 1 "Error: device already specified"
+            device="$1"
+            ;;
+    esac
+    shift
+done
+
+[ -z "$device" ] && die 1 "error: device not specified"
+
+# Because I'm writing mediocre code and I don't want to deal with this
+
+if [[ "$device" = */ ]]
+then
+    echo "Error: device path cannot end with slash" >&2
+    exit 1
+fi
+
+if [ "$(id -u)" != 0 ]
+then
+    echo "Error: you are not root!" >&2
+    exit 1
+fi
+
+# Checking for dependencies that have a slightly greater chance of not existing because this is
+# not an application we want to find out something is missing in the middle of the process.
+# We'll check for dependencies after testing if we're root. If running as a non-privileged user,
+# there's a possibility that user lacks access to a particular dependency but root *does* have
+# access to that particular dependency. The inverse is also theoretically possible, which is
+# worse - the dependency check would incorrectly report that all dependencies are met.
+depends=(wipefs fdisk parted "mkfs.$fstype" findmnt)
+
+label_prog=
+
+case "$fstype" in
+    ext2|ext3|ext4) label_prog=e2label;;
+    ntfs) label_prog=ntfslabel;;
+    exfat) label_prog=exfatlabel;;
+    *) die 10 "internal error: dependency for labeling $fstype";;
+esac
+
+depends+=("$label_prog")
+
+for d in "${depends[@]}"
+do
+    if ! which "$d" &> /dev/null
+    then
+        echo "Error: missing dependency $d" >&2
+        echo "Required dependencies: ${depends[*]}" >&2
+        exit 1
+    fi
+done
+
+# ok, we'll actually have one failsafe... we will outright refuse to operate on anything that resembles a mounted filesystem
+# ... and we will only operate on paths that point exactly to block devices
+[ -b "$device" ] || die 1 "Refusing to operate on non-block device $device"
+
+list_partitions() {
+    fdisk -l "$device" | grep -e '^/dev/' | cut -d ' ' -f 1
+}
+
+for d in $(list_partitions)
+do
+    if findmnt -S "$d" &> /dev/null
+    then
+        echo "Refusing to operate on $device, partition $d is mounted" >&2
+        exit 1
+    fi
+done
+
+# wipe drive
+
+# wipefs does not erase partition signatures and mkfs will ask twice if we really want to make the filesystem.
+# We could just use --force or whatever on mkfs, but the manpage for mkfs.ext2 also says that it will throw
+# hands if "create a file system, even if the specified device is not a partition on a block special device, or
+# if other parameters do not make sense". The "other parameters do not make sense" part is the important part
+# I'm thinking about. It shouldn't happen, and ideally this script should not be interactive, but if I'd rather
+# it ask twice if it thinks something is wrong enough.
+
+# We have to specify the partitions first then the whole device
+wipefs -af $(list_partitions) "$device" || exit 1
+
+# Create gpt table and single partition
+#echo "Creating partition table"
+# We don't need to specify the partition type here, we'll make a partition ourselves next
+parted -s "$device" -- mklabel gpt mkpart primary 1 -1 || exit 1
+
+# Create format partition
+# Simply appending a 1 for the partition number works for things like /dev/sda1, but fails if the partition
+# naming/numbering works like NVMe drives: /dev/nvme0n1p1. So we have to actually list the partitions.
+partition="$(list_partitions)"  # we just wiped everything and there is now only one partition so this is fine
+quick=
+[ "$fstype" = 'ntfs' ] && quick=-Q
+mkfs -t "$fstype" $quick "$partition" || exit 1
+
+# temporarily mount filesystem and chmod 777 so anyone can write anything
+if [ "$chmod777" = t ]
+then
+    echo "chmod 777"
+    mountpt="$(mktemp -d)"
+    mount "$partition" "$mountpt" || exit 1
+    chmod 777 "$mountpt" || exit 1
+    umount "$mountpt"
+fi
+
+if [ -n "$label" ]
+then
+    echo "Set partition label"
+    "$label_prog" "$partition" "$label" || exit 1
+fi
+
+# and that's it

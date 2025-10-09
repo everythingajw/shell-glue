@@ -60,6 +60,7 @@ files_to_install=(
     'dia'
     'dir'
     'dirdiff.py'
+    'easymkfs'
     'flattendir.bash'
     'getmacaddr'
     'md2html.bash'
