@@ -122,10 +122,25 @@ do_apt() {
 
     update_section apt
 
-    #sudo apt update
-    #check_fail "apt update" || return
+    # I don't know when the magic -U was introduced, so I'll assume it's in 3.0.
+    # The commit introducing -U is dated 2023-04-11 and apt 3.0.x was released
+    # 2025-04-04, so that should be far enough in the future.
+    # If our apt is old enough, we'll default to running both.
 
-    sudo apt -U upgrade
+    local use_u=
+
+    if [[ "$(apt --version)" =~ [[:space:]]3\..*[[:space:]] ]]
+    then
+        use_u='-U'
+    fi
+
+    if [ -z "$use_u" ]
+    then
+        sudo apt update
+        check_fail "apt update" || return
+    fi
+
+    sudo apt $use_u upgrade
     check_fail "apt upgrade" || return
 }
 
