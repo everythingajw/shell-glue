@@ -162,6 +162,7 @@ done
 
 # ok, we'll actually have one failsafe... we will outright refuse to operate on anything that resembles a mounted filesystem
 # ... and we will only operate on paths that point exactly to block devices
+[ -e "$device" ] || die 1 "No such file or directory $device"
 [ -b "$device" ] || die 1 "Refusing to operate on non-block device $device"
 
 list_partitions() {
