@@ -110,7 +110,7 @@ _install() {
     # linked_file -> targeted_file
     # We need to take the path relative to where we're going. This prevents problems with mounted filesystems
     # where what we think is "definitely undeniably root of fs" is not actually root of fs.
-    local targeted_file="$(realpath --relative-to "$into_dir" -- "$file_to_install")"
+    local targeted_file="$(realpath --relative-to "$into_dir" -- "${script_dir}/${file_to_install}")"
     local linked_file="${into_dir}/$(remove_extension "$file_to_install")"
 
     # Intentional unquoting here - unquoted forms allow expanding to "no argument" instead of an empty string argument
